@@ -1,0 +1,195 @@
+po_id,vendor,description,date,amount,status
+PO-2024-0001,Golf Solutions,Legal consulting fees,2024-01-30,2654.24,Complete
+PO-2024-0002,Acme Corporation,Construction materials,2023-12-31,1158.39,Complete
+PO-2024-0003,November Software,Legal consulting fees,2023-12-26,198.74,Complete
+PO-2024-0004,Kilo Logistics,Raw materials procurement,2024-02-28,249.45,Complete
+PO-2024-0005,Golf Solutions,Consulting services,2023-12-15,2578.76,Complete
+PO-2024-0006,Beta Systems Inc,Construction materials,2024-01-25,131.31,Complete
+PO-2024-0007,Delta Supply Co,Consulting services,2024-02-14,2580.22,Complete
+PO-2024-0008,Acme Corporation,Consulting services,2024-01-18,2575.42,Complete
+PO-2024-0009,India Manufacturing,Legal consulting fees,2024-03-06,517.58,Complete
+PO-2024-0010,Delta Supply Co,Legal consulting fees,2023-12-18,267.54,Complete
+PO-2024-0011,Oscar Equipment,Legal consulting fees,2024-02-13,201.59,Complete
+PO-2024-0013,Oscar Equipment,Utilities payment,2024-01-18,850.88,Complete
+PO-2024-0014,Papa Materials,Office supplies and equipment,2023-12-29,326.69,Complete
+PO-2024-0015,November Software,Equipment maintenance,2024-02-01,692.74,Complete
+PO-2024-0016,Kilo Logistics,Construction materials,2024-01-05,1060.43,Complete
+PO-2024-0017,Oscar Equipment,Software licensing fees,2024-03-03,5179.76,Complete
+PO-2024-0018,November Software,Vehicle maintenance,2024-01-20,1763.27,Complete
+PO-2024-0019,Delta Supply Co,Equipment maintenance,2024-01-01,114.65,Complete
+PO-2024-0020,Hotel Services,Accounting services,2024-01-07,2567.57,Complete
+PO-2024-0021,Oscar Equipment,Raw materials procurement,2024-02-12,431.3,Complete
+PO-2024-0022,November Software,Utilities payment,2024-02-28,5274.11,Complete
+PO-2024-0023,Foxtrot Industries,Equipment maintenance,2023-12-07,359.3,Complete
+PO-2024-0024,Juliet Consulting,Legal consulting fees,2023-12-23,497.36,Complete
+PO-2024-0025,Kilo Logistics,Marketing services,2024-02-22,1672.53,Complete
+PO-2024-0026,Beta Systems Inc,Legal consulting fees,2024-01-26,839.65,Complete
+PO-2024-0027,Hotel Services,Equipment maintenance,2023-12-18,466.61,Complete
+PO-2024-0028,Juliet Consulting,Construction materials,2024-02-12,567.13,Complete
+PO-2024-0030,Foxtrot Industries,Equipment maintenance,2024-02-01,1261.68,Complete
+PO-2024-0031,Gamma Technologies,Legal consulting fees,2024-03-08,297.03,Complete
+PO-2024-0032,Papa Materials,Legal consulting fees,2023-12-11,1023.88,Complete
+PO-2024-0033,November Software,Accounting services,2024-01-01,908.24,Complete
+PO-2024-0034,Echo Partners LLC,Office supplies and equipment,2023-12-25,153.8,Complete
+PO-2024-0035,Acme Corporation,Consulting services,2024-01-29,243.86,Complete
+PO-2024-0036,Golf Solutions,Construction materials,2023-12-22,5009.27,Complete
+PO-2024-0037,Echo Partners LLC,IT infrastructure setup,2024-02-27,962.76,Complete
+PO-2024-0038,Foxtrot Industries,Marketing services,2024-01-03,2694.56,Complete
+PO-2024-0039,Delta Supply Co,Raw materials procurement,2024-01-22,2704.24,Complete
+PO-2024-0040,Gamma Technologies,Office supplies and equipment,2023-12-26,357.92,Complete
+PO-2024-0041,Golf Solutions,Software licensing fees,2024-02-01,547.89,Complete
+PO-2024-0042,Juliet Consulting,Raw materials procurement,2024-02-16,576.53,Complete
+PO-2024-0043,Papa Materials,IT infrastructure setup,2024-01-03,2592.99,Complete
+PO-2024-0044,Mike Construction,Consulting services,2024-03-07,1207.85,Complete
+PO-2024-0045,Delta Supply Co,Office supplies and equipment,2024-03-25,1548.45,Complete
+PO-2024-0046,Kilo Logistics,Marketing services,2024-03-03,545.13,Complete
+PO-2024-0047,Beta Systems Inc,Utilities payment,2024-01-27,359.75,Complete
+PO-2024-0048,Hotel Services,Construction materials,2024-01-17,639.81,Complete
+PO-2024-0049,Foxtrot Industries,Office supplies and equipment,2023-12-28,5059.68,Complete
+PO-2024-0050,November Software,Office supplies and equipment,2024-01-28,536.04,Complete
+PO-2024-0051,India Manufacturing,Construction materials,2024-02-25,431.42,Complete
+PO-2024-0052,Papa Materials,Construction materials,2024-02-23,4982.5,Complete
+PO-2024-0053,Acme Corporation,Vehicle maintenance,2023-12-22,289.37,Complete
+PO-2024-0054,Golf Solutions,Accounting services,2024-02-14,2580.56,Complete
+PO-2024-0055,Gamma Technologies,Construction materials,2024-01-27,876.57,Complete
+PO-2024-0056,Delta Supply Co,Legal consulting fees,2024-03-12,544.53,Complete
+PO-2024-0057,November Software,Accounting services,2024-02-24,387.72,Complete
+PO-2024-0058,Papa Materials,Marketing services,2024-02-28,316.78,Complete
+PO-2024-0059,Delta Supply Co,Software licensing fees,2024-03-04,410.01,Complete
+PO-2024-0060,Oscar Equipment,Construction materials,2024-02-25,320.63,Complete
+PO-2024-0061,Hotel Services,Accounting services,2024-02-23,2584.81,Complete
+PO-2024-0062,Hotel Services,Office supplies and equipment,2024-02-06,485.69,Complete
+PO-2024-0063,Hotel Services,Equipment maintenance,2024-01-15,255.3,Complete
+PO-2024-0064,Hotel Services,Equipment maintenance,2024-01-25,1559.21,Complete
+PO-2024-0065,Hotel Services,Raw materials procurement,2024-01-06,5087.77,Complete
+PO-2024-0066,Foxtrot Industries,Construction materials,2023-12-17,1079.96,Complete
+PO-2024-0067,Lima Retail,Consulting services,2024-03-22,2690.63,Complete
+PO-2024-0068,Hotel Services,Equipment maintenance,2024-02-22,1548.39,Complete
+PO-2024-0069,India Manufacturing,Consulting services,2024-02-27,5120.01,Complete
+PO-2024-0070,Golf Solutions,Accounting services,2023-12-23,276.31,Complete
+PO-2024-0071,Papa Materials,Legal consulting fees,2024-03-01,307.41,Complete
+PO-2024-0072,Juliet Consulting,Office supplies and equipment,2024-02-04,303.38,Complete
+PO-2024-0073,Golf Solutions,Consulting services,2024-03-12,492.37,Complete
+PO-2024-0074,Beta Systems Inc,Construction materials,2024-03-14,273.7,Complete
+PO-2024-0075,Kilo Logistics,Office supplies and equipment,2024-02-28,5149.13,Complete
+PO-2024-0076,Oscar Equipment,Raw materials procurement,2024-02-05,5037.61,Complete
+PO-2024-0077,Gamma Technologies,Vehicle maintenance,2024-01-03,1126.73,Complete
+PO-2024-0078,Beta Systems Inc,Consulting services,2024-01-02,1714.35,Complete
+PO-2024-0080,Papa Materials,Raw materials procurement,2023-12-21,680.28,Complete
+PO-2024-0081,Acme Corporation,Vehicle maintenance,2024-02-25,534.7,Complete
+PO-2024-0082,Oscar Equipment,Equipment maintenance,2024-02-02,2696.9,Complete
+PO-2024-0083,Mike Construction,Consulting services,2024-01-08,229.6,Complete
+PO-2024-0084,November Software,Equipment maintenance,2024-03-08,2686.7,Complete
+PO-2024-0085,Gamma Technologies,Vehicle maintenance,2024-02-25,1669.56,Complete
+PO-2024-0086,Gamma Technologies,Office supplies and equipment,2024-02-14,5007.18,Complete
+PO-2024-0087,Juliet Consulting,Construction materials,2024-02-29,882.59,Complete
+PO-2024-0088,Oscar Equipment,Raw materials procurement,2024-01-25,635.03,Complete
+PO-2024-0089,Gamma Technologies,Raw materials procurement,2024-03-11,1226.06,Complete
+PO-2024-0090,Golf Solutions,Marketing services,2024-01-03,1762.77,Complete
+PO-2024-0091,India Manufacturing,Software licensing fees,2023-12-29,1001.93,Complete
+PO-2024-0092,India Manufacturing,Equipment maintenance,2024-03-10,1672.27,Complete
+PO-2024-0093,November Software,Legal consulting fees,2024-01-29,2534.75,Complete
+PO-2024-0094,Acme Corporation,Legal consulting fees,2024-02-26,949.53,Complete
+PO-2024-0095,India Manufacturing,Raw materials procurement,2024-01-23,1267.49,Complete
+PO-2024-0096,Hotel Services,Marketing services,2024-02-05,521.7,Complete
+PO-2024-0097,Mike Construction,Software licensing fees,2024-02-26,1003.96,Complete
+PO-2024-0098,Gamma Technologies,Construction materials,2023-12-27,851.42,Complete
+PO-2024-0099,Beta Systems Inc,IT infrastructure setup,2024-03-14,2539.54,Complete
+PO-2024-0100,Echo Partners LLC,Legal consulting fees,2024-01-02,1571.68,Complete
+PO-2024-0101,Juliet Consulting,Vehicle maintenance,2024-02-11,1596.44,Complete
+PO-2024-0102,India Manufacturing,Office supplies and equipment,2024-02-17,457.22,Complete
+PO-2024-0103,November Software,Accounting services,2024-01-13,1188.48,Complete
+PO-2024-0104,Delta Supply Co,Utilities payment,2023-12-15,928.14,Complete
+PO-2024-0105,Foxtrot Industries,Software licensing fees,2024-03-12,1224.33,Complete
+PO-2024-0106,Hotel Services,IT infrastructure setup,2024-02-24,5040.7,Complete
+PO-2024-0107,Juliet Consulting,Vehicle maintenance,2024-03-20,619.41,Complete
+PO-2024-0108,Foxtrot Industries,Accounting services,2024-01-20,459.35,Complete
+PO-2024-0109,Foxtrot Industries,Accounting services,2024-03-16,192.18,Complete
+PO-2024-0110,Beta Systems Inc,Vehicle maintenance,2023-12-25,1264.91,Complete
+PO-2024-0112,Mike Construction,Consulting services,2024-01-30,2509.0,Complete
+PO-2024-0113,Foxtrot Industries,Equipment maintenance,2024-01-14,1144.71,Complete
+PO-2024-0114,Oscar Equipment,Equipment maintenance,2024-03-06,496.61,Complete
+PO-2024-0115,Golf Solutions,Consulting services,2024-01-16,786.83,Complete
+PO-2024-0116,November Software,Legal consulting fees,2024-02-04,917.5,Complete
+PO-2024-0117,Hotel Services,Construction materials,2024-02-17,188.99,Complete
+PO-2024-0118,India Manufacturing,Accounting services,2024-02-23,385.76,Complete
+PO-2024-0119,Delta Supply Co,Legal consulting fees,2024-02-09,1582.55,Complete
+PO-2024-0121,Oscar Equipment,Marketing services,2024-01-27,5195.96,Complete
+PO-2024-0122,Echo Partners LLC,Accounting services,2024-02-09,289.09,Complete
+PO-2024-0123,India Manufacturing,Equipment maintenance,2024-02-02,853.34,Complete
+PO-2024-0124,Delta Supply Co,Raw materials procurement,2023-12-31,80.46,Complete
+PO-2024-0125,Papa Materials,Office supplies and equipment,2024-02-20,246.14,Complete
+PO-2024-0126,Gamma Technologies,Accounting services,2024-01-16,810.35,Complete
+PO-2024-0127,Hotel Services,Accounting services,2024-02-27,169.82,Complete
+PO-2024-0128,Beta Systems Inc,Raw materials procurement,2024-01-30,1506.91,Complete
+PO-2024-0129,Oscar Equipment,Office supplies and equipment,2024-03-03,310.76,Complete
+PO-2024-0130,India Manufacturing,Utilities payment,2024-02-24,1016.78,Complete
+PO-2024-0131,Kilo Logistics,Consulting services,2024-03-01,2677.38,Complete
+PO-2024-0132,Oscar Equipment,Consulting services,2023-12-30,2603.59,Complete
+PO-2024-0133,Foxtrot Industries,Vehicle maintenance,2024-01-19,1679.42,Complete
+PO-2024-0134,Gamma Technologies,Utilities payment,2023-12-08,783.31,Complete
+PO-2024-0135,Beta Systems Inc,Software licensing fees,2024-01-20,75.32,Complete
+PO-2024-0136,November Software,Construction materials,2024-02-07,1078.13,Complete
+PO-2024-0137,Gamma Technologies,Accounting services,2024-02-07,2564.26,Complete
+PO-2024-0138,Kilo Logistics,Software licensing fees,2024-02-17,211.9,Complete
+PO-2024-0139,Golf Solutions,Software licensing fees,2024-01-05,393.86,Complete
+PO-2024-0140,Delta Supply Co,Legal consulting fees,2024-01-12,350.4,Complete
+PO-2024-0141,Lima Retail,Utilities payment,2024-03-08,5193.14,Complete
+PO-2024-0142,Oscar Equipment,Utilities payment,2024-02-21,388.99,Complete
+PO-2024-0143,Oscar Equipment,Utilities payment,2024-02-12,5228.27,Complete
+PO-2024-0144,Golf Solutions,Marketing services,2024-02-26,54.63,Complete
+PO-2024-0146,India Manufacturing,IT infrastructure setup,2023-12-18,278.01,Complete
+PO-2024-0147,Mike Construction,Equipment maintenance,2024-01-21,773.84,Complete
+PO-2024-0148,Acme Corporation,Accounting services,2024-03-13,2652.93,Complete
+PO-2024-0149,Juliet Consulting,Utilities payment,2024-01-25,473.01,Complete
+PO-2024-0150,Hotel Services,IT infrastructure setup,2024-02-06,236.06,Complete
+PO-2024-0151,Acme Corporation,Marketing services,2024-01-15,535.14,Complete
+PO-2024-0152,India Manufacturing,Construction materials,2024-02-21,1051.56,Complete
+PO-2024-0153,Papa Materials,Marketing services,2024-01-05,964.22,Complete
+PO-2024-0154,Hotel Services,Accounting services,2023-12-23,1113.0,Complete
+PO-2024-0155,Juliet Consulting,Office supplies and equipment,2024-01-28,2679.91,Complete
+PO-2024-0156,Mike Construction,Software licensing fees,2024-01-31,2588.61,Complete
+PO-2024-0157,Echo Partners LLC,Consulting services,2024-01-15,1243.16,Complete
+PO-2024-0158,November Software,Marketing services,2024-02-12,772.39,Complete
+PO-2024-0159,Acme Corporation,Office supplies and equipment,2024-03-03,299.13,Complete
+PO-2024-0160,Foxtrot Industries,Construction materials,2024-03-14,2591.18,Complete
+PO-2024-0161,Golf Solutions,Equipment maintenance,2024-01-23,1623.23,Complete
+PO-2024-0162,Kilo Logistics,Utilities payment,2024-02-02,334.29,Complete
+PO-2024-0163,Kilo Logistics,Software licensing fees,2024-01-18,895.48,Complete
+PO-2024-0164,November Software,Legal consulting fees,2024-01-28,2754.41,Complete
+PO-2024-0165,Juliet Consulting,Legal consulting fees,2024-02-10,5200.58,Complete
+PO-2024-0166,Gamma Technologies,Consulting services,2024-02-08,942.03,Complete
+PO-2024-0167,Foxtrot Industries,IT infrastructure setup,2024-01-10,2576.55,Complete
+PO-2024-0168,Acme Corporation,Accounting services,2024-02-05,5065.28,Complete
+PO-2024-0169,Lima Retail,Office supplies and equipment,2023-12-10,857.15,Complete
+PO-2024-0170,November Software,Legal consulting fees,2024-01-31,2673.26,Complete
+PO-2024-0171,Papa Materials,Office supplies and equipment,2024-01-06,234.49,Complete
+PO-2024-0172,Mike Construction,Accounting services,2024-03-06,1629.42,Complete
+PO-2024-0173,Foxtrot Industries,Office supplies and equipment,2024-01-03,1727.45,Complete
+PO-2024-0174,Echo Partners LLC,Software licensing fees,2024-02-25,5102.76,Complete
+PO-2024-0175,Kilo Logistics,Accounting services,2024-02-02,1556.82,Complete
+PO-2024-0176,Foxtrot Industries,Utilities payment,2024-01-08,1037.28,Complete
+PO-2024-0177,Papa Materials,Accounting services,2024-03-05,2531.99,Complete
+PO-2024-0178,Delta Supply Co,Software licensing fees,2024-01-16,5016.56,Complete
+PO-2024-0179,Mike Construction,Software licensing fees,2024-02-05,120.31,Complete
+PO-2024-0180,Echo Partners LLC,Office supplies and equipment,2024-01-01,5101.59,Complete
+PO-2024-0181,Beta Systems Inc,Vehicle maintenance,2023-12-25,181.92,Complete
+PO-2024-0182,Foxtrot Industries,Construction materials,2024-02-22,313.98,Complete
+PO-2024-0183,Gamma Technologies,Utilities payment,2024-01-01,1677.01,Complete
+PO-2024-0184,Delta Supply Co,Construction materials,2024-02-26,402.09,Complete
+PO-2024-0185,Oscar Equipment,Construction materials,2024-02-22,5118.04,Complete
+PO-2024-0186,Beta Systems Inc,Office supplies and equipment,2024-03-11,1249.27,Complete
+PO-2024-0187,Lima Retail,IT infrastructure setup,2024-03-15,1659.95,Complete
+PO-2024-0188,Acme Corporation,Marketing services,2024-01-24,1460.12,Complete
+PO-2024-0189,Hotel Services,Consulting services,2024-01-22,1732.18,Complete
+PO-2024-0190,Hotel Services,Marketing services,2024-02-06,1572.82,Complete
+PO-2024-0191,November Software,Equipment maintenance,2024-01-22,930.43,Complete
+PO-2024-0192,India Manufacturing,Raw materials procurement,2024-01-30,1467.11,Complete
+PO-2024-0193,November Software,Legal consulting fees,2023-12-11,948.63,Complete
+PO-2024-0194,India Manufacturing,Equipment maintenance,2024-01-17,1667.65,Complete
+PO-2024-0195,Lima Retail,Accounting services,2024-02-08,1486.32,Complete
+PO-2024-0196,Juliet Consulting,IT infrastructure setup,2024-02-21,752.38,Complete
+PO-2024-0197,Papa Materials,Marketing services,2024-02-04,2573.43,Complete
+PO-2024-0198,Oscar Equipment,Construction materials,2024-01-25,5032.53,Complete
+PO-2024-0199,Beta Systems Inc,Legal consulting fees,2024-01-07,1193.01,Complete
+PO-2024-0200,Acme Corporation,IT infrastructure setup,2023-12-12,4961.92,Complete
