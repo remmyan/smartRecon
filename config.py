@@ -11,7 +11,7 @@ class Config:
     model="groq/llama3-8b-8192",  # Choose your model
     temperature=0.7,
     max_tokens=512,
-    api_key=os.getenv("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")
+    api_key=os.getenv("GROQ_API_KEY")
 )
     OPENAI_MAX_TOKENS = int(os.getenv('OPENAI_MAX_TOKENS', '2000'))
     

@@ -30,7 +30,7 @@ def check_groq_key(api_key: str) -> bool:
         return False
 
 # Usage
-api_key = "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"
+api_key = "GROQ_API_KEY"
 if check_groq_key(api_key):
     print("API key is valid and working!")
 else:
