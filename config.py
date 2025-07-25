@@ -1,12 +1,18 @@
 import os
 from dotenv import load_dotenv
+from langchain_ollama import OllamaLLM
+from langchain_groq import ChatGroq
 
 load_dotenv()
 
 class Config:
-    # OpenAI Configuration
-    OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-    OPENAI_MODEL = os.getenv('OPENAI_MODEL', 'gpt-4')
+    #OPENAI_MODEL = os.getenv('OPENAI_MODEL', 'gpt-4')
+    OPENAI_MODEL = ChatGroq(
+    model="groq/llama3-8b-8192",  # Choose your model
+    temperature=0.7,
+    max_tokens=512,
+    api_key=os.getenv("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")
+)
     OPENAI_MAX_TOKENS = int(os.getenv('OPENAI_MAX_TOKENS', '2000'))
     
     # Database Configuration
@@ -34,6 +40,3 @@ class Config:
     RAG_TOP_K = int(os.getenv('RAG_TOP_K', '5'))
     RAG_SIMILARITY_THRESHOLD = float(os.getenv('RAG_SIMILARITY_THRESHOLD', '0.7'))
 
-# Validate required configuration
-if not Config.OPENAI_API_KEY:
-    print("Warning: OPENAI_API_KEY not set. Please check .env file.")

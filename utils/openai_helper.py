@@ -7,7 +7,7 @@ import pandas as pd
 
 class OpenAIHelper:
     def __init__(self):
-        self.client = OpenAI(api_key=Config.OPENAI_API_KEY)
+       # self.client = OpenAI(api_key=Config.OPENAI_API_KEY)
         self.model = Config.OPENAI_MODEL
         self.max_tokens = Config.OPENAI_MAX_TOKENS
     
