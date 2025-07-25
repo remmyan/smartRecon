@@ -47,7 +47,7 @@ class LoadDataTool(BaseTool):
                 'date': next((col for col in df.columns if 'date' in col.lower()), None),
                 'description': next((col for col in df.columns if 'desc' in col.lower()), None)
             }
-                issues = []
+            issues = []
             df = df.rename(columns=column_map)
             
             data = df.to_dict(orient='records')
