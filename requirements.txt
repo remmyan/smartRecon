@@ -12,4 +12,3 @@ langchain==0.2.16  # Compatible with recent CrewAI
 langchain-core==0.2.40
 langchain-openai==0.1.25  # Updated to match
 crewai==0.148.0  # Latest stable version as of July 2025
-langchain_groq

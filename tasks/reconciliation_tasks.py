@@ -10,7 +10,7 @@ from agents.orchestration import orchestration_agent
 
 # Data Ingestion Task
 ingest_data_task = Task(
-    description="Ingest and process data from ERP systems, bank statements, and invoices using OCR. Validate and structure the data for downstream agents.",
+    description="Ingest and process data from ERP systems, bank statements, and invoices. Validate and structure the data for downstream agents.",
     agent=data_ingestion_agent,
     expected_output="Structured JSON data containing ERP records, bank statements, and extracted invoice details, with validation summary."
 )
