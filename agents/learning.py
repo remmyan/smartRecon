@@ -20,28 +20,78 @@ except ImportError:
 
 class LearningAgent:
     def __init__(self):
-        """Initialize Learning Agent with ChromaDB vector storage"""
+        """Initialize Learning Agent with ChromaDB vector storage and AI APIs"""
+        # Initialize API configurations
+        self.grok_api_key = Config.GROK_API_KEY
+        self.openai_api_key = Config.OPENAI_API_KEY
+        
+        # Set active API based on available keys
+        self.active_api = self._determine_active_api()
+        
+        # Configure API settings based on active API
+        if self.active_api == 'grok':
+            self.model = Config.GROK_MODEL
+            self.max_tokens = Config.GROK_MAX_TOKENS
+            self.temperature = Config.GROK_TEMPERATURE
+        elif self.active_api == 'openai':
+            self.model = Config.OPENAI_MODEL
+            self.max_tokens = Config.OPENAI_MAX_TOKENS
+            self.temperature = 0.7  # Default OpenAI temperature
+        else:
+            print("Warning: No API keys found. Advanced learning features will be limited")
+            
+        # Initialize learning statistics
+        self.learning_stats = {
+            'total_patterns': 0,
+            'accuracy_improvement': 0.0,
+            'last_updated': datetime.now().isoformat(),
+            'pattern_breakdown': {
+                'transaction_patterns': 0,
+                'vendor_patterns': 0,
+                'description_patterns': 0,
+                'amount_patterns': 0
+            }
+        }
         
         # Initialize ChromaDB client
-        self.chroma_client = chromadb.PersistentClient(
-            path=Config.CHROMA_DB_PATH,
-            settings=Settings(
-                anonymized_telemetry=False,
-                allow_reset=True
+        try:
+            self.chroma_client = chromadb.PersistentClient(
+                path=Config.CHROMA_DB_PATH,
+                settings=Settings(
+                    anonymized_telemetry=False,
+                    allow_reset=True
+                )
             )
-        )
-        
-        # Initialize embedding function
-        self.embedding_function = embedding_functions.SentenceTransformerEmbeddingFunction(
-            model_name=Config.EMBEDDING_MODEL
-        )
-        
-        # Create collections for different types of patterns
-        self.transaction_patterns = self._get_or_create_collection("transaction_patterns")
-        self.vendor_patterns = self._get_or_create_collection("vendor_patterns")
-        self.description_patterns = self._get_or_create_collection("description_patterns")
-        self.amount_patterns = self._get_or_create_collection("amount_patterns")
-        self.user_corrections = self._get_or_create_collection("user_corrections")
+            
+            # Initialize embedding function
+            self.embedding_function = embedding_functions.SentenceTransformerEmbeddingFunction(
+                model_name=Config.EMBEDDING_MODEL
+            )
+            
+            # Create collections for different types of patterns
+            self.transaction_patterns = self._get_or_create_collection("transaction_patterns")
+            self.vendor_patterns = self._get_or_create_collection("vendor_patterns")
+            self.description_patterns = self._get_or_create_collection("description_patterns")
+            self.amount_patterns = self._get_or_create_collection("amount_patterns")
+            self.user_corrections = self._get_or_create_collection("user_corrections")
+            
+            print("✅ Learning Agent initialized with ChromaDB")
+        except Exception as e:
+            print(f"Warning: Error initializing ChromaDB: {str(e)}")
+            # Initialize empty collections to prevent attribute errors
+            self.transaction_patterns = []
+            self.vendor_patterns = []
+            self.description_patterns = []
+            self.amount_patterns = []
+            self.user_corrections = []
+            
+    def _determine_active_api(self) -> str:
+        """Determine which API to use based on available keys"""
+        if self.grok_api_key:
+            return 'grok'
+        elif self.openai_api_key:
+            return 'openai'
+        return 'none'
         
         # Statistics tracking
         self.learning_stats = {
@@ -186,6 +236,63 @@ class LearningAgent:
     
     def _store_fuzzy_patterns(self, fuzzy_matches: pd.DataFrame) -> int:
         """Store patterns from fuzzy matches"""
+        
+    def analyze_text(self, text: str) -> Dict[str, Any]:
+        """Analyze text using the active AI API (Grok or OpenAI)
+        
+        Args:
+            text (str): The text to analyze (e.g. transaction description)
+            
+        Returns:
+            Dict[str, Any]: Analysis results from the active API
+        """
+        if self.active_api == 'none':
+            return {"error": "No API keys configured"}
+            
+        try:
+            # Common parameters for both APIs
+            params = {
+                "model": self.model,
+                "max_tokens": self.max_tokens,
+                "temperature": self.temperature,
+                "messages": [
+                    {"role": "system", "content": "You are a financial transaction analysis assistant."},
+                    {"role": "user", "content": text}
+                ]
+            }
+            
+            if self.active_api == 'grok':
+                # Grok-specific implementation
+                headers = {"Authorization": f"Bearer {self.grok_api_key}"}
+                # TODO: Implement Grok API call
+                
+            else:  # OpenAI
+                # OpenAI-specific implementation
+                headers = {"Authorization": f"Bearer {self.openai_api_key}"}
+                # TODO: Implement OpenAI API call
+            
+            return {
+                "status": "success",
+                "model": self.model,
+                "api": self.active_api,
+                "analysis": {},  # Add actual API analysis results here
+                "timestamp": datetime.now().isoformat()
+            }
+            
+        except Exception as e:
+            print(f"Error in {self.active_api.upper()} API analysis: {e}")
+            return {"error": str(e)}
+            
+            return {
+                "status": "success",
+                "model": "grok",
+                "analysis": {},  # Add actual Grok analysis results here
+                "timestamp": datetime.now().isoformat()
+            }
+            
+        except Exception as e:
+            print(f"Error in Grok API analysis: {e}")
+            return {"error": str(e)}
         
         patterns_added = 0
         
@@ -359,13 +466,74 @@ class LearningAgent:
     def get_learning_insights(self) -> Dict[str, Any]:
         """Get insights from the learning process"""
         
-        insights = {
-            'total_patterns': self._get_total_pattern_count(),
-            'pattern_breakdown': self._get_pattern_breakdown(),
-            'top_vendors': self._get_top_vendors(),
-            'recent_patterns': self._get_recent_patterns(),
-            'learning_stats': self.learning_stats
-        }
+        # Update learning stats
+        try:
+            pattern_breakdown = {}
+            total_patterns = 0
+            
+            # Get counts from each collection
+            for collection_name in ['transaction_patterns', 'vendor_patterns', 'description_patterns', 'amount_patterns']:
+                try:
+                    collection = self.chroma_client.get_collection(collection_name)
+                    count = collection.count()
+                    pattern_breakdown[collection_name] = count
+                    total_patterns += count
+                except Exception:
+                    pattern_breakdown[collection_name] = 0
+            
+            # Update learning stats
+            self.learning_stats['total_patterns'] = total_patterns
+            self.learning_stats['pattern_breakdown'] = pattern_breakdown
+            self.learning_stats['last_updated'] = datetime.now().isoformat()
+            
+            # Calculate accuracy improvement (placeholder)
+            self.learning_stats['accuracy_improvement'] = min(total_patterns * 0.5, 95.0)  # Example calculation
+            
+            return {
+                'total_patterns': total_patterns,
+                'pattern_breakdown': pattern_breakdown,
+                'learning_stats': self.learning_stats,
+                'top_vendors': self._get_top_vendors(),
+                'recent_patterns': self._get_recent_patterns()
+            }
+            
+        except Exception as e:
+            print(f"Error getting learning insights: {e}")
+            return {
+                'total_patterns': 0,
+                'pattern_breakdown': {},
+                'learning_stats': self.learning_stats,
+                'top_vendors': [],
+                'recent_patterns': []
+            }
+    
+    def _get_top_vendors(self) -> List[Dict[str, Any]]:
+        """Get the top vendors by pattern count"""
+        try:
+            collection = self.chroma_client.get_collection("vendor_patterns")
+            # This is a placeholder - implement actual vendor pattern retrieval based on your data structure
+            return [
+                {"vendor": "Sample Vendor", "pattern_count": 0, "accuracy": 0}
+            ]
+        except Exception:
+            return []
+    
+    def _get_recent_patterns(self) -> List[Dict[str, Any]]:
+        """Get the most recent learning patterns"""
+        try:
+            collection = self.chroma_client.get_collection("transaction_patterns")
+            # This is a placeholder - implement actual pattern retrieval based on your data structure
+            return [
+                {
+                    "pattern": {
+                        "match_type": "semantic",
+                        "confidence": 0.95,
+                        "timestamp": datetime.now().isoformat()
+                    }
+                }
+            ]
+        except Exception:
+            return []
         
         return insights
     

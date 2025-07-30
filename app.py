@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import pandas as pd
 import sqlite3
@@ -9,7 +10,6 @@ from agents.orchestration import OrchestrationAgent
 from utils.sample_data import generate_sample_data
 from utils.database import init_database, get_connection
 from config import Config
-import os
 
 # Page configuration
 st.set_page_config(
@@ -19,9 +19,9 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Check OpenAI configuration
-if not Config.OPENAI_API_KEY:
-    st.error("⚠️ OpenAI API Key not configured. Please set OPENAI_API_KEY in your .env file.")
+# Check AI configurations
+if not Config.OPENAI_API_KEY and not Config.GROK_API_KEY:
+    st.error("⚠️ No AI API Key configured. Please set either OPENAI_API_KEY or GROK_API_KEY in your .env file.")
     st.stop()
 
 # Initialize database and agents
@@ -68,10 +68,12 @@ def main():
     # API Status indicator
     col1, col2, col3 = st.columns([2, 1, 1])
     with col3:
-        st.markdown("""
+        active_model = "Grok-3" if Config.GROK_API_KEY else "GPT-4"
+        active_api = "Grok AI" if Config.GROK_API_KEY else "ChatGPT"
+        st.markdown(f"""
         <div class="llm-card">
-            <h4>🤖 ChatGPT + ChromaDB</h4>
-            <p>Model: GPT-4 | Vector DB: Active</p>
+            <h4>🤖 {active_api} + ChromaDB</h4>
+            <p>Model: {active_model} | Vector DB: Active</p>
         </div>
         """, unsafe_allow_html=True)
     
@@ -649,11 +651,22 @@ def show_configuration():
             
             with col1:
                 fuzzy_threshold = st.slider("Fuzzy Match Threshold", 60, 100, Config.FUZZY_THRESHOLD)
-                semantic_model = st.selectbox("Semantic Model", ["GPT-4", "GPT-3.5", "Local BERT"])
+                active_api = "Grok" if Config.GROK_API_KEY else "OpenAI"
+                semantic_model = st.selectbox(
+                    "Semantic Model", 
+                    ["Grok-3", "GPT-4", "GPT-3.5", "Local BERT"],
+                    index=0 if active_api == "Grok" else 1
+                )
                 max_processing_time = st.number_input("Max Processing Time (seconds)", 1, 300, 30)
             
             with col2:
                 confidence_threshold = st.slider("Auto-Approval Confidence", 70, 100, 90)
+                if active_api == "Grok":
+                    temperature = st.slider("Temperature", 0.0, 1.0, Config.GROK_TEMPERATURE)
+                    max_tokens = st.number_input("Max Tokens", 100, 4000, Config.GROK_MAX_TOKENS)
+                else:
+                    temperature = st.slider("Temperature", 0.0, 1.0, 0.7)
+                    max_tokens = st.number_input("Max Tokens", 100, 4000, Config.OPENAI_MAX_TOKENS)
                 enable_learning = st.checkbox("Enable Continuous Learning", True)
                 parallel_processing = st.checkbox("Parallel Processing", True)
         
