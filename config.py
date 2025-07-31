@@ -4,9 +4,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Config:
-    # OpenAI Configuration
-    OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-    OPENAI_MODEL = os.getenv('OPENAI_MODEL', 'gpt-4')
+    GROQ_API_KEY = os.getenv('GROQ_API_KEY')
+    GROQ_MODEL = "llama3-8b-8192"  # Or "mixtral-8x7b-32768" for better reasoning
+    EMBEDDING_MODEL = 'all-MiniLM-L6-v2'  # Sentence Transformers model
+    CHROMA_DB_PATH = "./chroma_db"  # Persistent path for Chroma
+    CHROMA_COLLECTION_NAME="transaction_patterns"
+    RAG_TOP_K = 5  # Number of similar patterns to retrieve
+    RAG_SIMILARITY_THRESHOLD = 0.7  # Min similarity for patterns
     OPENAI_MAX_TOKENS = int(os.getenv('OPENAI_MAX_TOKENS', '2000'))
     
     # Database Configuration
@@ -29,11 +33,11 @@ class Config:
     # Exception Management
     HIGH_RISK_AMOUNT = 10000
     CRITICAL_AGE_DAYS = 30
-    
-    # RAG Configuration
-    RAG_TOP_K = int(os.getenv('RAG_TOP_K', '5'))
-    RAG_SIMILARITY_THRESHOLD = float(os.getenv('RAG_SIMILARITY_THRESHOLD', '0.7'))
 
-# Validate required configuration
-if not Config.OPENAI_API_KEY:
-    print("Warning: OPENAI_API_KEY not set. Please check .env file.")
+    # @staticmethod
+    # def get_llm(temperature=0.3):
+    #     return ChatGroq(
+    #         model=Config.GROQ_MODEL,
+    #         api_key=Config.GROQ_API_KEY,
+    #         temperature=temperature
+    #     )

@@ -30,7 +30,7 @@ class DataIngestionAgent:
                 
                 # Combine all files of same type
                 combined_data = pd.concat(processed_data, ignore_index=True)
-                results[file_type] = len(combined_data)
+                results[file_type] = combined_data.to_dict(orient='records')
                 results['total_records'] += len(combined_data)
                 
                 # Store in database or session state
@@ -89,8 +89,16 @@ class DataIngestionAgent:
                 'date': ['invoice_date', 'date', 'transaction_date'],
                 'description': ['description', 'memo', 'details']
             },
+            'ledger': {
+                'order_id': ['invoice_number', 'order_id', 'invoice_id'],
+                'vendor': ['vendor_name', 'supplier', 'vendor'],
+                'amount': ['amount', 'total', 'invoice_amount'],
+                'date': ['invoice_date', 'date', 'transaction_date'],
+                'description': ['description', 'memo', 'details']
+            },
             'bank_statements': {
                 'transaction_id': ['txn_id', 'transaction_id', 'ref_no'],
+                'vendor': ['vendor_name', 'payee', 'vendor'],
                 'amount': ['amount', 'debit', 'credit'],
                 'date': ['date', 'transaction_date', 'posting_date'],
                 'description': ['description', 'memo', 'details']

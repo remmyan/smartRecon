@@ -13,6 +13,12 @@ class AnomalyDetectionAgent:
             'unusual_vendors',
             'amount_patterns'
         ]
+
+    def remove_duplicates(self, df: pd.DataFrame) -> Tuple[pd.DataFrame, List[Dict]]:
+        duplicates = self._detect_duplicates(df)
+        # Logic to drop duplicates (keep first or per business rule)
+        deduped_df = df.drop_duplicates(subset=['amount', 'vendor', 'date'], keep='first').copy()
+        return deduped_df, duplicates    
         
     def detect_anomalies(self, matching_results: Dict[str, pd.DataFrame]) -> Dict[str, List]:
         """Detect various types of anomalies in transaction data"""
@@ -86,8 +92,15 @@ class AnomalyDetectionAgent:
         if len(df) < 2:
             return near_duplicates
         
-        # Sort by vendor and date for efficient comparison
-        df_sorted = df.sort_values(['vendor', 'date']).reset_index()
+        sort_cols = []
+        if 'vendor' in df.columns:
+            sort_cols.append('vendor')
+        elif 'payee' in df.columns:
+            sort_cols.append('payee')
+        if 'date' in df.columns:
+            sort_cols.append('date')
+
+        df_sorted = df.sort_values(sort_cols).reset_index(drop=True)
         
         for i in range(len(df_sorted) - 1):
             for j in range(i + 1, min(i + 10, len(df_sorted))):  # Check next 10 records

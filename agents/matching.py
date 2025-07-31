@@ -3,8 +3,10 @@ import numpy as np
 from rapidfuzz import fuzz, process
 from typing import Tuple, List, Dict, Any
 import re
-from utils.openai_helper import openai_helper
+from utils.openai_helper import GroqHelper
 from config import Config
+from agents.learning import LearningAgent  # Assuming LearningAgent is defined in agents/learning.py
+from scipy.optimize import linear_sum_assignment
 
 class MatchingAgent:
     def __init__(self):
@@ -12,6 +14,8 @@ class MatchingAgent:
         self.amount_tolerance = Config.AMOUNT_TOLERANCE
         self.date_window = Config.DATE_WINDOW
         self.use_llm = True  # Enable LLM matching
+        self.groq_helper = GroqHelper()
+        self.learning_agent = LearningAgent()  # Initialize Learning Agent for pattern retrieval
         
     def perform_matching(self, invoices: pd.DataFrame, ledger: pd.DataFrame, 
                         bank_statements: pd.DataFrame) -> Dict[str, pd.DataFrame]:
@@ -26,30 +30,30 @@ class MatchingAgent:
         }
         
         # Step 1: Exact matching (fast, rule-based)
-        exact_matches = self._exact_match(invoices, ledger)
+        exact_matches = self._exact_match(bank_statements, ledger)
         results['exact_matches'] = exact_matches
         
         # Remove matched records
-        unmatched_invoices = invoices[~invoices.index.isin(exact_matches.index)]
+        unmatched_bank_statements = bank_statements[~bank_statements.index.isin(exact_matches.index)]
         unmatched_ledger = ledger[~ledger.index.isin(exact_matches.index)]
         
         # Step 2: LLM-powered semantic matching on remaining records
-        if self.use_llm and not unmatched_invoices.empty and not unmatched_ledger.empty:
-            llm_matches = self._llm_semantic_match(unmatched_invoices, unmatched_ledger)
+        if self.use_llm and not unmatched_bank_statements.empty and not unmatched_ledger.empty:
+            llm_matches, llm_unmatched = self._llm_semantic_match(unmatched_bank_statements, unmatched_ledger)
             results['llm_matches'] = llm_matches
             
             # Remove LLM matched records
-            unmatched_invoices = unmatched_invoices[~unmatched_invoices.index.isin(llm_matches.index)]
+            unmatched_bank_statements = unmatched_bank_statements[~unmatched_bank_statements.index.isin(llm_matches.index)]
             unmatched_ledger = unmatched_ledger[~unmatched_ledger.index.isin(llm_matches.index)]
         
         # Step 3: Fuzzy matching on remaining records
-        if not unmatched_invoices.empty and not unmatched_ledger.empty:
-            fuzzy_matches = self._fuzzy_match(unmatched_invoices, unmatched_ledger)
+        if not unmatched_bank_statements.empty and not unmatched_bank_statements.empty:
+            fuzzy_matches = self._fuzzy_match(unmatched_bank_statements, unmatched_ledger)
             results['fuzzy_matches'] = fuzzy_matches
         
-        # Step 4: Bank statement matching
-        bank_matches = self._bank_matching(ledger, bank_statements)
-        results['bank_matches'] = bank_matches
+        # # Step 4: Bank statement matching
+        # bank_matches = self._bank_matching(ledger, bank_statements)
+        # results['bank_matches'] = bank_matches
         
         # Step 5: Collect unmatched items
         all_matched_ids = set()
@@ -57,63 +61,135 @@ class MatchingAgent:
             if not results[match_type].empty:
                 all_matched_ids.update(results[match_type].index)
         
-        results['unmatched'] = invoices[~invoices.index.isin(all_matched_ids)]
+        results['unmatched'] = llm_unmatched
         
         return results
+
+    def extract_reason(self, reasoning: dict) -> str:
+        candidates = ['date_proximity', 'vendor_name_variations', 'amount_similarity']
+        best_reason = None
+        best_score = 101  # Init above max 100
+        print(f"Extracting reason : {reasoning}")
+        for factor in candidates:
+            score_info = reasoning.get(factor, None)
+            print(f"Factor: {factor}, Score Info: {score_info}")
+            if score_info:
+                score = score_info.get('score', 100)
+                reason = score_info.get('reason', '')
+                if score < best_score and score < 100:
+                    best_score = score
+                    best_reason = reason
+        
+        if best_reason:
+            return best_reason
+        else:
+            return "No matching record found above confidence threshold."    
     
-    def _llm_semantic_match(self, df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
-        """Perform LLM-powered semantic matching using ChatGPT"""
-        
+    def _llm_semantic_match(self, df1: pd.DataFrame, df2: pd.DataFrame) -> (pd.DataFrame, pd.DataFrame):
+        """LLM matching for remaining, collaborating with Learning Agent for patterns."""
         matches = []
-        
-        # Convert DataFrames to list of dictionaries for API calls
+        unmatched = []
         records1 = df1.to_dict('records')
         records2 = df2.to_dict('records')
-        
-        # Limit the number of comparisons to manage API costs
-        max_comparisons = min(len(records1), 20)  # Process max 20 records
-        
-        for i, record1 in enumerate(records1[:max_comparisons]):
+
+        for i, record1 in enumerate(records1):
+            # Collaborate: Query Learning Agent for patterns
+            similar_patterns = self.learning_agent.retrieve_similar_patterns(record1)
+            print(f"Record {i}: Retrieved {similar_patterns} similar patterns for LLM matching.")
+            #pattern_adjustment = self._apply_pattern_adjustment(record1, similar_patterns)
+
+            # Use Groq LLM for semantic matching
             best_match = None
+            un_match = None
             best_confidence = 0
-            
-            # Compare with up to 10 target records to control API usage
-            comparison_limit = min(len(records2), 10)
-            
-            for j, record2 in enumerate(records2[:comparison_limit]):
-                # Use ChatGPT for semantic analysis
-                match_result = openai_helper.semantic_match_analysis(record1, record2)
-                
-                if (match_result['is_match'] and 
-                    match_result['confidence'] > best_confidence and
-                    match_result['confidence'] >= 70):  # Minimum confidence threshold
-                    
-                    best_confidence = match_result['confidence']
+            for j, record2 in enumerate(records2):
+                match_result = self.groq_helper.semantic_match_analysis(record1, record2, similar_patterns)  # Using Groq helper
+                #adjusted_confidence = match_result['confidence'] + (len(similar_patterns) * 0.1)  # Boost from patterns
+                if match_result['is_match'] :
                     best_match = {
-                        'record': df1.iloc[i].copy(),
+                        'record': record1,
                         'matched_with': j,
                         'confidence': match_result['confidence'],
-                        'reasoning': match_result['reasoning'],
-                        'match_factors': match_result.get('factors', {}),
-                        'match_type': 'llm_semantic'
+                        'reasoning': match_result['reasoning']
                     }
-            
+                else:
+                    un_match = {
+                        'record': record1,
+                        'matched_with': None,
+                        'confidence': match_result['confidence'],
+                        'reasoning': match_result['reasoning']
+                    }    
+
             if best_match:
-                match_record = best_match['record']
-                match_record['match_type'] = best_match['match_type']
+                match_record = pd.Series(best_match['record'])
+                match_record['match_type'] = 'llm'
                 match_record['match_confidence'] = best_match['confidence']
-                match_record['match_reasoning'] = best_match['reasoning']
                 match_record['matched_with'] = best_match['matched_with']
-                match_record['match_factors'] = str(best_match['match_factors'])
+                match_record['match_reasoning'] = self.extract_reason(best_match['reasoning'])
                 matches.append(match_record)
+            else:
+                unmatched_record = pd.Series(un_match['record'])
+                unmatched_record['match_type'] = 'llm'
+                unmatched_record['match_confidence'] = un_match['confidence']
+                unmatched_record['matched_with'] = None   
+                unmatched_record['match_reasoning'] = self.extract_reason(un_match['reasoning']) 
+                unmatched.append(unmatched_record)
         
-        return pd.DataFrame(matches) if matches else pd.DataFrame()
+        matched_df = pd.DataFrame(matches) if matches else pd.DataFrame()
+        unmatched_df = pd.DataFrame(unmatched) if unmatched else pd.DataFrame()
+    
+        return matched_df, unmatched_df
+
+    def compute_llm_score_matrix(records1, records2):
+        n, m = len(records1), len(records2)
+        score_matrix = np.zeros((n, m))
+        metadata_matrix = np.empty((n, m), dtype=object)
+        for i, rec1 in enumerate(records1):
+            similar_patterns = self.learning_agent.retrieve_similar_patterns(rec1)
+            for j, rec2 in enumerate(records2):
+                match_result = self.groq_helper.semantic_match_analysis(rec1, rec2, similar_patterns)
+                score_matrix[i, j] = match_result["confidence"]
+                metadata_matrix[i, j] = match_result
+        return score_matrix, metadata_matrix
+
+    def optimal_llm_matching(records1, records2, confidence_threshold=60):
+        score_matrix, meta_matrix = self.compute_llm_score_matrix(records1, records2)
+        # Convert score to "cost" for Hungarian: maximize confidence -> minimize negative confidence
+        cost_matrix = -score_matrix
+        row_ind, col_ind = linear_sum_assignment(cost_matrix)
+        matches = []
+        for i, j in zip(row_ind, col_ind):
+            if score_matrix[i, j] >= confidence_threshold:
+                match_info = dict(records1[i])
+                match_info.update({
+                    "matched_with": j,
+                    "match_type": "llm",
+                    "match_confidence": score_matrix[i, j],
+                    "match_reasoning": meta_matrix[i, j].get("reasoning", ""),
+                })
+                matches.append(match_info)
+        return pd.DataFrame(matches)    
+
+    def _apply_pattern_adjustment(self, record: Dict[str, Any], patterns: List[Dict[str, Any]]) -> str:
+        """Apply learnings from patterns (from your history)."""
+        adjustment = ""
+        for pattern in patterns:
+            if pattern['similarity'] > 0.8:
+                # Example adjustment: Correct amount based on pattern
+                record['amount'] = pattern['metadata'].get('corrected_amount', record['amount'])
+                adjustment += f"Applied correction from pattern ID {pattern['id']}\n"
+        return adjustment
+
+    def _bank_matching(self, ledger: pd.DataFrame, bank: pd.DataFrame) -> pd.DataFrame:
+        """Bank matching from your original code (kept as is)."""
+        # (Paste your _bank_matching code here from the attachment)
+        pass  # Replace with your implementation     
     
     def _exact_match(self, df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
         """Perform exact matching on key fields"""
         
         matches = []
-        
+        print(f"Performing exact match between {df1} records and {df2} records")
         for idx1, row1 in df1.iterrows():
             for idx2, row2 in df2.iterrows():
                 if (abs(row1['amount'] - row2['amount']) < 0.01 and

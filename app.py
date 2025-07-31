@@ -5,11 +5,13 @@ import time
 from datetime import datetime, timedelta
 import plotly.express as px
 import plotly.graph_objects as go
-from agents.orchestration import OrchestrationAgent
+from agents.orchestration import Orchestrator
+from agents.learning import LearningAgent
 from utils.sample_data import generate_sample_data
 from utils.database import init_database, get_connection
 from config import Config
 import os
+import traceback
 
 # Page configuration
 st.set_page_config(
@@ -20,14 +22,15 @@ st.set_page_config(
 )
 
 # Check OpenAI configuration
-if not Config.OPENAI_API_KEY:
-    st.error("⚠️ OpenAI API Key not configured. Please set OPENAI_API_KEY in your .env file.")
+if not Config.GROQ_API_KEY:
+    st.error("⚠️ GROQ API Key not configured. Please set OPENAI_API_KEY in your .env file.")
     st.stop()
 
 # Initialize database and agents
 try:
     init_database()
-    orchestrator = OrchestrationAgent()
+    orchestrator = Orchestrator()
+    learning_agent = LearningAgent()
 except Exception as e:
     st.error(f"Initialization error: {str(e)}")
     st.stop()
@@ -65,42 +68,24 @@ def main():
     if 'uploaded_data_stats' not in st.session_state:
         st.session_state.uploaded_data_stats = None
     
-    # API Status indicator
-    col1, col2, col3 = st.columns([2, 1, 1])
-    with col3:
-        st.markdown("""
-        <div class="llm-card">
-            <h4>🤖 ChatGPT + ChromaDB</h4>
-            <p>Model: GPT-4 | Vector DB: Active</p>
-        </div>
-        """, unsafe_allow_html=True)
     
     # Sidebar navigation
     st.sidebar.title("Navigation")
     page = st.sidebar.selectbox("Select Page", [
         "Dashboard", 
         "Data Upload", 
-        "AI Reconciliation", 
-        "Match Analysis",
         "Exception Management",
         "Learning Analytics",
-        "System Configuration"
     ])
     
     if page == "Dashboard":
         show_dashboard()
     elif page == "Data Upload":
         show_data_upload()
-    elif page == "AI Reconciliation":
-        show_ai_reconciliation()
-    elif page == "Match Analysis":
-        show_match_analysis()
     elif page == "Exception Management":
-        show_exceptions()
+        show_matching_review()
     elif page == "Learning Analytics":
         show_learning_analytics()
-    elif page == "System Configuration":
-        show_configuration()
 
 def show_dashboard():
     st.header("📊 System Dashboard")
@@ -116,10 +101,21 @@ def show_dashboard():
     # Get real statistics from last reconciliation or current data
     if st.session_state.reconciliation_results:
         results = st.session_state.reconciliation_results
-        total_transactions = results.get('total_transactions', 0)
-        match_rate = results.get('match_rate', 0)
-        exceptions = results.get('exceptions', 0)
-        total_amount = results.get('total_amount', 0)  # We'll add this calculation
+        if results:
+            exact = len(results['matching_results'].get('exact_matches', pd.DataFrame()))
+            llm = len(results['matching_results'].get('llm_matches', pd.DataFrame()))
+            unmatched = len(results['matching_results'].get('unmatched', pd.DataFrame()))
+            total = exact + llm + unmatched
+            match_rate = (exact + llm) / total * 100 if total else 0
+            # st.metric("Auto-Match Rate", f"{match_rate:.1f}%")
+            # st.metric("Open Exceptions", len(results['exceptions'].get('prioritized_exceptions', [])))
+            # st.metric("Total Transactions", total)
+            # st.metric("Processing Time (s)", f"{results.get('processing_time', 0):.2f}")
+            
+            total_transactions = total
+            match_rate = f"{match_rate:.1f}%"
+            #exceptions = len(results['exceptions'].get('prioritized_exceptions', []))
+            total_amount = results.get('total_amount', 0)  # We'll add this calculation
     else:
         # Get basic stats from available data
         stats = get_current_data_stats()
@@ -127,9 +123,11 @@ def show_dashboard():
         match_rate = 0  # No reconciliation run yet
         exceptions = 0
         total_amount = stats['total_amount']
+        unmatched = 0
     
     # Key metrics with real data
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3 = st.columns(3)
+
     
     with col1:
         st.markdown(f"""
@@ -142,7 +140,7 @@ def show_dashboard():
     with col2:
         st.markdown(f"""
         <div class="metric-card">
-            <h3>{match_rate:.1f}%</h3>
+            <h3>{match_rate}</h3>
             <p>Auto-Match Rate</p>
         </div>
         """, unsafe_allow_html=True)
@@ -150,16 +148,8 @@ def show_dashboard():
     with col3:
         st.markdown(f"""
         <div class="metric-card">
-            <h3>{exceptions}</h3>
+            <h3>{unmatched}</h3>
             <p>Open Exceptions</p>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col4:
-        st.markdown(f"""
-        <div class="metric-card">
-            <h3>${total_amount:,.0f}</h3>
-            <p>Total Amount</p>
         </div>
         """, unsafe_allow_html=True)
     
@@ -200,8 +190,7 @@ def show_dashboard():
         
         # Get learning insights from ChromaDB
         try:
-            from agents.learning import learning_agent
-            insights = learning_agent.get_learning_insights()
+            insights = learning_agent.get_learning_stats()
             
             pattern_data = insights.get('pattern_breakdown', {})
             if pattern_data and any(pattern_data.values()):
@@ -336,19 +325,20 @@ def show_data_upload():
                 key="ledger"
             )
         
-        if st.button("Process Uploaded Files"):
+        if st.button("Start Reconciliation"):
             if any([uploaded_invoices, uploaded_pos, uploaded_bank, uploaded_ledger]):
-                with st.spinner("Processing files with Data Ingestion Agent..."):
+                with st.spinner("Reconsiliation in progress..."):
                     try:
-                        results = orchestrator.process_uploads({
+                        results = orchestrator.run_ai_reconciliation({
                             'invoices': uploaded_invoices,
                             'purchase_orders': uploaded_pos,
                             'bank_statements': uploaded_bank,
-                            'general_ledger': uploaded_ledger
+                            'ledger': uploaded_ledger
                         })
                         
                         # Store results in session state
                         st.session_state.uploaded_data_stats = results
+                        st.session_state.reconciliation_results = results
                         
                         st.success(f"✅ Successfully processed {results['total_records']} records")
                         
@@ -356,13 +346,13 @@ def show_data_upload():
                         st.subheader("Processing Summary")
                         summary_data = []
                         
-                        for doc_type, files in [
-                            ("Invoices", uploaded_invoices),
-                            ("Purchase Orders", uploaded_pos), 
-                            ("Bank Statements", uploaded_bank),
-                            ("General Ledger", uploaded_ledger)
+                        for doc_type, file_type, files in [
+                            ("Invoices", "invoices", uploaded_invoices),
+                            ("Purchase Orders", "purchase_orders", uploaded_pos), 
+                            ("Bank Statements", "bank_statements", uploaded_bank),
+                            ("General Ledger", "ledger", uploaded_ledger)
                         ]:
-                            record_count = results.get(doc_type.lower().replace(' ', '_'), 0)
+                            record_count = results.get(file_type, 0)
                             status = "✅ Complete" if record_count > 0 else "⚪ No data"
                             summary_data.append({
                                 "Document Type": doc_type,
@@ -374,6 +364,8 @@ def show_data_upload():
                         st.dataframe(summary_df, use_container_width=True)
                         
                     except Exception as e:
+                        full_traceback = traceback.format_exc()
+                        print(f"Full exception: {full_traceback}")
                         st.error(f"❌ Error processing files: {str(e)}")
             else:
                 st.warning("⚠️ Please upload at least one file to process")
@@ -538,45 +530,198 @@ def show_match_analysis():
             filtered_df = explanations_df[explanations_df['confidence'] >= min_confidence]
             st.dataframe(filtered_df, use_container_width=True)
 
-def show_exceptions():
-    st.header("⚠️ Exception Management")
-    
-    if not st.session_state.reconciliation_results:
-        st.info("🔄 Please run AI Reconciliation first to see exceptions")
-        return
-    
+def show_matching_review():
+    st.title("🔍 Review Matching Results")
     results = st.session_state.reconciliation_results
-    
-    st.metric("Total Exceptions", results['exceptions'])
-    
-    if results['exceptions'] > 0:
-        st.info("🚧 Exception details and management interface will be enhanced in the next update")
-        
-        # Placeholder exception data for demonstration
-        exception_data = {
-            'Exception ID': [f'EXC-{i:03d}' for i in range(1, min(results['exceptions'] + 1, 6))],
-            'Type': ['Amount Mismatch', 'Missing PO', 'Duplicate', 'Unusual Amount', 'Date Variance'][:results['exceptions']],
-            'Priority': ['High', 'Medium', 'High', 'Critical', 'Low'][:results['exceptions']],
-            'Status': ['Open'] * min(results['exceptions'], 5)
-        }
-        
-        exception_df = pd.DataFrame(exception_data)
-        st.dataframe(exception_df, use_container_width=True)
+    if not results:
+        st.warning("Run reconciliation first.")
+        return
+    matching_results = results.get('matching_results', {})    
+    # Combine matched and unmatched records into a single DataFrame for display
+    # Safely get each DataFrame, defaulting to empty DataFrame if the key is missing
+    llm_matches = matching_results.get('llm_matches', pd.DataFrame())
+    exact_matches = matching_results.get('exact_matches', pd.DataFrame())
+    fuzzy_matches = matching_results.get('fuzzy_matches', pd.DataFrame())
+
+    # Combine them into one DataFrame (rows from all three)
+    matched = pd.concat([llm_matches, exact_matches, fuzzy_matches], ignore_index=True)
+    unmatched = matching_results.get('unmatched', pd.DataFrame())
+
+    if matched.empty and unmatched.empty:
+        st.info("No matching results to review.")
+        return
+
+    # Prepare matched DataFrame with uniform columns
+    if not matched.empty:
+        matched_display = matched.copy()
+        matched_display['status'] = 'Matched'
+        # Ensure reasoning is string (if dict, convert to JSON for display)
+        matched_display['reasoning_display'] = matched_display['match_reasoning'].apply(
+            lambda x: x if isinstance(x, str) else st.json(x, expanded=False) if x else "No reasoning provided."
+        )
     else:
-        st.success("🎉 No exceptions found! All transactions matched successfully.")
+        matched_display = pd.DataFrame()
+
+    # Prepare unmatched DataFrame with uniform columns and default reason placeholder
+    if not unmatched.empty:
+        unmatched_display = unmatched.copy()
+        unmatched_display['status'] = 'Unmatched'
+        # Fill missing reasoning with default str
+        unmatched_display['reasoning_display'] = unmatched_display['match_reasoning']
+    else:
+        unmatched_display = pd.DataFrame()
+
+    # Combine for display
+    combined_df = pd.concat([matched_display, unmatched_display], ignore_index=True)
+
+    # Show combined results in a table (without editing yet)
+    st.subheader("All Matching Results")
+    st.dataframe(combined_df.drop(columns=['match_reasoning'], errors='ignore'))
+
+    st.markdown("---")
+    st.subheader("Review Unmatched Records")
+
+    # Filter unmatched for interactive review
+    unmatched_for_review = unmatched_display.copy()
+
+    if unmatched_for_review.empty:
+        st.info("No unmatched records to review.")
+        return
+
+    # Initialize session state storage for user feedback if not present
+    if 'review_feedback' not in st.session_state:
+        st.session_state['review_feedback'] = {}
+
+    # Display each unmatched record with option to mark as matched + mandatory reason
+    for idx, row in unmatched_for_review.iterrows():
+        st.markdown(f"### Unmatched Record: {row.get('transaction_id', idx)}")
+
+        # Display record fields (customize as needed)
+        st.json(row.drop(labels=['status', 'reasoning_display'], errors='ignore').to_dict())
+
+        # Show reasoning in expander
+        with st.expander("LLM Reasoning / Explanation"):
+            st.write(row['reasoning_display'])
+
+        # Checkbox to mark as matched
+        mark_matched = st.checkbox("Mark as matched", key=f"mark_matched_{idx}")
+
+        # Text input for mandatory reason if marked
+        reason_input = ""
+        if mark_matched:
+            reason_input = st.text_area(
+                "Please provide a reason for marking as matched (required):", 
+                key=f"match_reason_{idx}"
+            )
+            if not reason_input.strip():
+                st.error("A reason is required when marking as matched.")
+
+        # Store user inputs in session state
+        st.session_state['review_feedback'][idx] = {
+            "mark_matched": mark_matched,
+            "reason": reason_input.strip() if mark_matched else None,
+            "original_record": row.to_dict(),
+        }
+
+    # Submit button to process feedback
+    if st.button("Submit Reviewed Matches"):
+        feedback = st.session_state.get('review_feedback', {})
+        learned = []
+
+        for idx, entry in feedback.items():
+            if entry.get("mark_matched") and entry.get("reason"):
+                original = entry['original_record']
+                corrected = original.copy()
+                corrected['user_confirmed_match'] = True
+                corrected['user_feedback_reason'] = entry['reason']
+                #corrected['review_timestamp'] = datetime.now().isoformat()
+
+                # Store the correction with the Learning Agent
+                learning_agent.store_correction(original, corrected)
+
+                learned.append({'original': original, 'corrected': corrected})
+
+
+        if learned:
+            st.success(f"Stored {len(learned)} user-reviewed match corrections. These will improve future matching.")
+            st.json(learned)
+        else:
+            st.info("No corrections submitted or reasons missing for marked matches. Please provide reasons.")
+
+def show_exceptions():
+    st.title("⚡ Exception Management")
+    results = st.session_state.reconciliation_results
+    if not results:
+        st.warning("Run reconciliation first.")
+        return
+
+    prioritized_ex = results['exceptions'].get('prioritized_exceptions', [])
+    unmatched = results['matching_results'].get('unmatched', pd.DataFrame())
+
+    # ... Display anomalies, exceptions, unmatched as before ...
+
+    # Prepare correction targets: metadata from exceptions + unmatched invoices
+    corrections_target = []
+    for exc in prioritized_ex:
+        rec = exc.get('metadata', {})
+        if rec:
+            # Add fields for reconciliation tracking - default False and empty comment
+            rec['reconciled'] = False
+            rec['comments'] = ''
+            corrections_target.append(rec)
+    corrections_target += unmatched.to_dict('records') if unmatched is not None else []
+
+    if not corrections_target:
+        st.info("No exceptions or unmatched records to correct.")
+        return
+
+    df = pd.DataFrame(corrections_target)
+
+    # Add columns for reconciliation and comments
+    if 'reconciled' not in df.columns:
+        df['reconciled'] = False
+    if 'comments' not in df.columns:
+        df['comments'] = ''
+
+    # Display editable table with reconciliation controls
+    st.markdown("#### Mark Exceptions as Reconciled and Enter Comments")
+    edited_df = st.data_editor(df, num_rows="dynamic", key="correction_editor", use_container_width=True)
+
+    if st.button("Submit Reconciliations"):
+        original_records = df.to_dict('records')
+        edited_records = edited_df.to_dict('records')
+
+        learned = []
+        for old, new in zip(original_records, edited_records):
+            # Only proceed if user marked reconciled
+            if new.get('reconciled') and (old != new):
+                corrected = new.copy()
+                # Optionally record reconciliation timestamp
+                corrected['reconciliation_timestamp'] = datetime.now().isoformat()
+
+                # Store correction in Learning Agent
+                learning_agent.store_correction(old, corrected)
+
+                learned.append({'original': old, 'corrected': corrected})
+
+        if learned:
+            st.success(f"Stored {len(learned)} reconciliations. These will improve matching in future runs.")
+            st.json(learned)
+        else:
+            st.info("No reconciliations submitted.")
 
 def show_learning_analytics():
     st.header("📊 AI Learning Analytics with ChromaDB")
     
     try:
-        from agents.learning import learning_agent
-        insights = learning_agent.get_learning_insights()
+        from agents.learning import LearningAgent
+        insights = learning_agent.get_learning_stats()
         
         # Learning statistics
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            st.metric("Total Patterns", insights['total_patterns'])
+            st.metric("Total Patterns", insights['total_corrections'])
         
         with col2:
             pattern_breakdown = insights.get('pattern_breakdown', {})
@@ -623,7 +768,7 @@ def show_learning_analytics():
             'Metric': ['Vector Collections', 'Total Embeddings', 'Storage Type', 'Similarity Search'],
             'Value': [
                 len(pattern_breakdown),
-                insights['total_patterns'],
+                insights['total_corrections'],
                 'ChromaDB Persistent',
                 'Cosine Similarity'
             ]
@@ -702,8 +847,8 @@ def show_configuration():
                 
                 if st.button("Test ChromaDB Connection"):
                     try:
-                        insights = learning_agent.get_learning_insights()
-                        st.success(f"✅ Connected! {insights['total_patterns']} patterns stored")
+                        insights = learning_agent.get_learning_stats()
+                        st.success(f"✅ Connected! {insights['total_corrections']} patterns stored")
                     except Exception as e:
                         st.error(f"❌ Connection failed: {e}")
             
@@ -723,7 +868,7 @@ def show_configuration():
             
             with col2:
                 if st.button("View Collections"):
-                    insights = learning_agent.get_learning_insights()
+                    insights = learning_agent.get_learning_stats()
                     st.json(insights.get('pattern_breakdown', {}))
             
             with col3:
