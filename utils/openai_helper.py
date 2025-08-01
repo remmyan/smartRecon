@@ -35,7 +35,7 @@ class GroqHelper:
                     {"role": "user", "content": prompt}
                 ],
                 max_tokens=self.max_tokens,
-                temperature=0.5,  # Low temperature for consistent results
+                temperature=1,  # Low temperature for consistent results
                 response_format={"type": "json_object"}
             )
             print(f"Groq response: {response}")
@@ -127,9 +127,11 @@ class GroqHelper:
     def _build_matching_prompt(self, record1: Dict, record2: Dict, similar_patterns=None) -> str:
         """Build prompt for semantic matching analysis"""
         patterns_text = ""
+        corrected_amount = 0
         if similar_patterns and len(similar_patterns) > 0:
             for i, pat in enumerate(similar_patterns[:5]):  # limit to 5 patterns
                 metadata = pat.get('pattern_metadata', {})
+                corrected_amount = metadata.get('amount')
                 # Build a formatted string of all metadata fields and values
                 metadata_parts = []
                 for key, value in metadata.items():
@@ -137,48 +139,92 @@ class GroqHelper:
                 metadata_str = "; ".join(metadata_parts)
                 
                 patterns_text += f"\nPattern {i+1} metadata: {metadata_str}"
-        return f"""
-        You are a financial reconciliation assistant. Your task is to determine if two financial records represent the same transaction.
+        patterns_exist = similar_patterns and len(similar_patterns) > 0   
+        if patterns_exist:
+            return f"""
+            You are a financial reconciliation assistant. Your task is to determine if two financial records represent the same transaction.
 
-        correction patterns: {patterns_text if patterns_text else ' None.'}
+            correction patterns: {patterns_text if patterns_text else ' None.'}
 
-        Analyze the two records below considering:
-        - Amount similarity (should match exactly with each other or with amount in correction patterns for same vendor)
-        - Date proximity (payments can occur days after invoice dates)
-        - Vendor name variations and possible abbreviations
-        - Description similarities
+            Analyze the two records below considering:
+            - Amount similarity:  
+            Aamounts must match exactly.  
+            Ideally, amounts should match exactly.
+            If amounts differ, check if either record’s amount matches the corrected amount from the correction patterns — in this case, {corrected_amount}. 
+            At least one amount should match {corrected_amount} for a valid match and confidence score 100.
+            - Date proximity (payments can occur days after invoice dates)
+            - Vendor name variations and possible abbreviations
+            - Description similarities
 
-        If any field differs try matching with the field in correction patterns above for same vendor and decide score based on this match. 
-        If that too does not match or there are no correction patterns, then mark is_match false and provide clear reasoning.
+            Reply only with a JSON matching this schema:
 
-        Reply only with a JSON matching this schema:
+            {{
+            "is_match": true or false,
+            "confidence": integer 0-100,
+            "reasoning": {{
+                "date_proximity": {{"score": 0-100, "reason": "explanation"}},
+                "vendor_name_variations": {{...}},
+                "amount_similarity": {{...}}
+            }}
+            }}
 
-        {{
-        "is_match": true or false,
-        "confidence": integer 0-100,
-        "reasoning": {{
-            "date_proximity": {{"score": 0-100, "reason": "explanation"}},
-            "vendor_name_variations": {{...}},
-            "amount_similarity": {{...}}
-        }}
-        }}
+            Do not write anything else. Your entire answer MUST be valid JSON.
 
-        Do not write anything else. Your entire answer MUST be valid JSON.
+            Record 1:
+            - Amount: {record1.get('amount', 'N/A')}
+            - Date: {record1.get('date', 'N/A')}
+            - Vendor: {record1.get('vendor', 'N/A')}
+            - Description: {record1.get('description', 'N/A')}
+            - Reference: {record1.get('reference', 'N/A')}
 
-        Record 1:
-        - Amount: {record1.get('amount', 'N/A')}
-        - Date: {record1.get('date', 'N/A')}
-        - Vendor: {record1.get('vendor', 'N/A')}
-        - Description: {record1.get('description', 'N/A')}
-        - Reference: {record1.get('reference', 'N/A')}
+            Record 2:
+            - Amount: {record2.get('amount', 'N/A')}
+            - Date: {record2.get('date', 'N/A')}
+            - Vendor: {record2.get('vendor', 'N/A')}
+            - Description: {record2.get('description', 'N/A')}
+            - Reference: {record2.get('reference', 'N/A')}
+            """  
+        else:
+            return f"""    
+            You are a financial reconciliation assistant. Your task is to determine if two financial records represent the same transaction.
 
-        Record 2:
-        - Amount: {record2.get('amount', 'N/A')}
-        - Date: {record2.get('date', 'N/A')}
-        - Vendor: {record2.get('vendor', 'N/A')}
-        - Description: {record2.get('description', 'N/A')}
-        - Reference: {record2.get('reference', 'N/A')}
-        """
+            Please analyze the two records below considering:
+            - Amount similarity (should ideally match exactly)
+            - Date proximity (payments can occur days after invoice dates)
+            - Vendor name variations and possible abbreviations
+            - Description similarities
+
+            If any field differs, provide clear reasoning.
+
+            Reply only with a JSON matching this schema:
+
+            {{
+            "is_match": true or false,
+            "confidence": integer 0-100,
+            "reasoning": {{
+                "date_proximity": {{"score": 0-100, "reason": "explanation"}},
+                "vendor_name_variations": {{...}},
+                "amount_similarity": {{...}}
+            }}
+            }}
+
+            Do not write anything else. Your entire answer MUST be valid JSON.
+
+            Record 1:
+            - Amount: {record1.get('amount', 'N/A')}
+            - Date: {record1.get('date', 'N/A')}
+            - Vendor: {record1.get('vendor', 'N/A')}
+            - Description: {record1.get('description', 'N/A')}
+            - Reference: {record1.get('reference', 'N/A')}
+
+            Record 2:
+            - Amount: {record2.get('amount', 'N/A')}
+            - Date: {record2.get('date', 'N/A')}
+            - Vendor: {record2.get('vendor', 'N/A')}
+            - Description: {record2.get('description', 'N/A')}
+            - Reference: {record2.get('reference', 'N/A')}
+            """
+        
 
     def _build_anomaly_prompt(self, transaction: Dict, context: List[Dict]) -> str:
         """Build prompt for anomaly detection"""

@@ -5,7 +5,7 @@ load_dotenv()
 
 class Config:
     GROQ_API_KEY = os.getenv('GROQ_API_KEY')
-    GROQ_MODEL = "llama3-8b-8192"  # Or "mixtral-8x7b-32768" for better reasoning
+    GROQ_MODEL = "llama-3.1-8b-instant"  # Or "mixtral-8x7b-32768" for better reasoning
     EMBEDDING_MODEL = 'all-MiniLM-L6-v2'  # Sentence Transformers model
     CHROMA_DB_PATH = "./chroma_db"  # Persistent path for Chroma
     CHROMA_COLLECTION_NAME="transaction_patterns"
