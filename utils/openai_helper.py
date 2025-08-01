@@ -128,10 +128,12 @@ class GroqHelper:
         """Build prompt for semantic matching analysis"""
         patterns_text = ""
         corrected_amount = 0
+        user_feedback = ""
         if similar_patterns and len(similar_patterns) > 0:
             for i, pat in enumerate(similar_patterns[:5]):  # limit to 5 patterns
                 metadata = pat.get('pattern_metadata', {})
                 corrected_amount = metadata.get('amount')
+                user_feedback = metadata.get('user_feedback', '')
                 # Build a formatted string of all metadata fields and values
                 metadata_parts = []
                 for key, value in metadata.items():
@@ -147,11 +149,11 @@ class GroqHelper:
             correction patterns: {patterns_text if patterns_text else ' None.'}
 
             Analyze the two records below considering:
-            - Amount similarity:  
-            Aamounts must match exactly.  
+            - Amount similarity:   
             Ideally, amounts should match exactly.
             If amounts differ, check if either record’s amount matches the corrected amount from the correction patterns — in this case, {corrected_amount}. 
-            At least one amount should match {corrected_amount} for a valid match and confidence score 100.
+            At least one amount should match {corrected_amount} for a valid match and confidence score 100. 
+            Use {user_feedback} for reasoning.
             - Date proximity (payments can occur days after invoice dates)
             - Vendor name variations and possible abbreviations
             - Description similarities

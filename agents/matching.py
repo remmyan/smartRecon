@@ -78,7 +78,7 @@ class MatchingAgent:
                 reason = score_info.get('reason', '')
                 if score < best_score and score < 100:
                     best_score = score
-                    best_reason = reason
+                best_reason = reason
         
         if best_reason:
             return best_reason
