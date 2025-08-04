@@ -59,8 +59,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 def main():
-    st.title("🤖 AI-Powered AP Reconciliation System")
-    st.markdown("*Automated accounts payable reconciliation with ChatGPT semantic matching and ChromaDB learning*")
+    st.title("🤖 SmartRecon - AI-Powered App-Reconciliation System")
+    st.markdown("*Automated accounts payable reconciliation with LLM semantic matching and ChromaDB learning*")
     
     # Initialize session state for data persistence
     if 'reconciliation_results' not in st.session_state:
@@ -73,14 +73,13 @@ def main():
     st.sidebar.title("Navigation")
     page = st.sidebar.selectbox("Select Page", [
         "Dashboard", 
-        "Data Upload", 
-        "Exception Management",
-        "Learning Analytics",
+        "Reconciliation", 
+        "Exception Management"
     ])
     
     if page == "Dashboard":
         show_dashboard()
-    elif page == "Data Upload":
+    elif page == "Reconciliation":
         show_data_upload()
     elif page == "Exception Management":
         show_matching_review()
@@ -91,12 +90,12 @@ def show_dashboard():
     st.header("📊 System Dashboard")
     
     # Generate sample data if needed
-    if st.sidebar.button("Generate Sample Data"):
-        with st.spinner("Generating sample transaction data..."):
-            generate_sample_data()
-            # Clear any existing results to force refresh
-            st.session_state.reconciliation_results = None
-        st.success("Sample data generated successfully!")
+    # if st.sidebar.button("Generate Sample Data"):
+    #     with st.spinner("Generating sample transaction data..."):
+    #         generate_sample_data()
+    #         # Clear any existing results to force refresh
+    #         st.session_state.reconciliation_results = None
+    #     st.success("Sample data generated successfully!")
     
     # Get real statistics from last reconciliation or current data
     if st.session_state.reconciliation_results:
@@ -158,69 +157,104 @@ def show_dashboard():
     
     with col1:
         st.subheader("Processing Performance")
+        # if st.session_state.reconciliation_results:
+        #     results = st.session_state.reconciliation_results
+            
+        #     # Prepare performance data as a DataFrame
+        #     performance_data = {
+        #         'Match Type': ['Exact Matches', 'AI Matches', 'Fuzzy Matches', 'Exceptions'],
+        #         'Count': [
+        #             results.get('exact_matches', 0),
+        #             results.get('llm_matches', 0), 
+        #             results.get('fuzzy_matches', 0),
+        #             results.get('exceptions', 0)
+        #         ],
+        #         'Color': ['#28a745', '#17a2b8', '#ffc107', '#dc3545']
+        #     }
+            
+        #     fig = px.bar(
+        #         performance_data, 
+        #         x='Match Type', 
+        #         y='Count',
+        #         color='Color',
+        #         color_discrete_map={color: color for color in performance_data['Color']}
+        #     )
+        #     fig.update_layout(showlegend=False)
+        #     st.plotly_chart(fig, use_container_width=True)
+        
         if st.session_state.reconciliation_results:
             results = st.session_state.reconciliation_results
             
-            # Create performance chart
-            performance_data = {
+            # Prepare performance data as a DataFrame
+            performance_data = pd.DataFrame({
                 'Match Type': ['Exact Matches', 'AI Matches', 'Fuzzy Matches', 'Exceptions'],
                 'Count': [
-                    results.get('exact_matches', 0),
-                    results.get('llm_matches', 0), 
-                    results.get('fuzzy_matches', 0),
-                    results.get('exceptions', 0)
+                    len(results.get('matching_results', {}).get('exact_matches', pd.DataFrame())),
+                    len(results.get('matching_results', {}).get('llm_matches', pd.DataFrame())),
+                    len(results.get('matching_results', {}).get('fuzzy_matches', pd.DataFrame())),
+                    len(results.get('matching_results', {}).get('exceptions', pd.DataFrame()))
                 ],
                 'Color': ['#28a745', '#17a2b8', '#ffc107', '#dc3545']
-            }
-            
+            })
+
+            # Create bar chart
             fig = px.bar(
-                performance_data, 
-                x='Match Type', 
+                performance_data,
+                x='Match Type',
                 y='Count',
-                color='Color',
-                color_discrete_map={color: color for color in performance_data['Color']}
+                color='Match Type',
+                color_discrete_map=dict(zip(performance_data['Match Type'], performance_data['Color']))
             )
-            fig.update_layout(showlegend=False)
+
+            fig.update_layout(
+                showlegend=False,
+                title='🔍 Performance Poll Chart',
+                xaxis_title='Match Type',
+                yaxis_title='Number of Matches',
+                plot_bgcolor='rgba(0,0,0,0)',
+                paper_bgcolor='rgba(0,0,0,0)'
+            )
+
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.info("Run AI Reconciliation to see performance data")
     
-    with col2:
-        st.subheader("Learning Progress")
+    # with col2:
+    #     st.subheader("Learning Progress")
         
-        # Get learning insights from ChromaDB
-        try:
-            insights = learning_agent.get_learning_stats()
-            
-            pattern_data = insights.get('pattern_breakdown', {})
-            if pattern_data and any(pattern_data.values()):
-                fig = px.pie(
-                    values=list(pattern_data.values()),
-                    names=list(pattern_data.keys()),
-                    title="Knowledge Base Distribution"
-                )
-                st.plotly_chart(fig, use_container_width=True)
-            else:
-                st.info("No learning patterns yet. Process some data to build knowledge base.")
+    #     # Get learning insights from ChromaDB
+    #     try:
+    #         insights = learning_agent.get_learning_stats()
+    #         st.info(f"Total Patterns Learned: {insights}")
+    #         pattern_data = insights.get('pattern_breakdown', {})
+    #         if pattern_data and any(pattern_data.values()):
+    #             fig = px.pie(
+    #                 values=list(pattern_data.values()),
+    #                 names=list(pattern_data.keys()),
+    #                 title="Knowledge Base Distribution"
+    #             )
+    #             st.plotly_chart(fig, use_container_width=True)
+    #         else:
+    #             st.info("No learning patterns yet. Process some data to build knowledge base.")
                 
-        except Exception as e:
-            st.error(f"Error loading learning insights: {e}")
+    #     except Exception as e:
+    #         st.error(f"Error loading learning insights: {e}")
     
     # Recent activity with real data
-    st.subheader("Recent System Activity")
+    # st.subheader("Recent System Activity")
     
-    if hasattr(orchestrator, 'processing_log') and orchestrator.processing_log:
-        # Show actual processing log
-        log_df = orchestrator.get_processing_log()
-        if not log_df.empty:
-            # Show last 5 entries
-            recent_log = log_df.tail(5).copy()
-            recent_log['timestamp'] = pd.to_datetime(recent_log['timestamp'])
-            st.dataframe(recent_log, use_container_width=True)
-        else:
-            show_placeholder_activity()
-    else:
-        show_placeholder_activity()
+    # if hasattr(orchestrator, 'processing_log') and orchestrator.processing_log:
+    #     # Show actual processing log
+    #     log_df = orchestrator.get_processing_log()
+    #     if not log_df.empty:
+    #         # Show last 5 entries
+    #         recent_log = log_df.tail(5).copy()
+    #         recent_log['timestamp'] = pd.to_datetime(recent_log['timestamp'])
+    #         st.dataframe(recent_log, use_container_width=True)
+    #     else:
+    #         show_placeholder_activity()
+    # else:
+    #     show_placeholder_activity()
 
 def show_placeholder_activity():
     """Show placeholder activity when no real log exists"""
@@ -265,30 +299,15 @@ def get_current_data_stats():
                     if 'amount' in data.columns:
                         stats['total_amount'] += data['amount'].sum()
         
-        # Fallback to sample data if no uploaded data
-        if stats['total_records'] == 0:
-            try:
-                if os.path.exists('data/invoices.csv'):
-                    sample_invoices = pd.read_csv('data/invoices.csv')
-                    stats['total_records'] = len(sample_invoices)
-                    if 'amount' in sample_invoices.columns:
-                        stats['total_amount'] = sample_invoices['amount'].sum()
-                else:
-                    # Default values for fresh installation
-                    stats['total_records'] = 200
-                    stats['total_amount'] = 250000
-            except Exception:
-                pass
-                
     except Exception as e:
         print(f"Error getting data stats: {e}")
     
     return stats
 
 def show_data_upload():
-    st.header("📁 Data Upload & Ingestion")
+    st.header("Reconciliation")
     
-    tab1, tab2 = st.tabs(["File Upload", "Database Integration"])
+    (tab1,) = st.tabs(["File Upload"])
     
     with tab1:
         st.subheader("Upload Financial Documents")
@@ -296,21 +315,6 @@ def show_data_upload():
         col1, col2 = st.columns(2)
         
         with col1:
-            uploaded_invoices = st.file_uploader(
-                "Upload Invoices", 
-                type=['csv', 'xlsx', 'pdf'],
-                accept_multiple_files=True,
-                key="invoices"
-            )
-            
-            uploaded_pos = st.file_uploader(
-                "Upload Purchase Orders",
-                type=['csv', 'xlsx', 'pdf'],
-                accept_multiple_files=True,
-                key="pos"
-            )
-        
-        with col2:
             uploaded_bank = st.file_uploader(
                 "Upload Bank Statements",
                 type=['csv', 'xlsx', 'pdf'],
@@ -318,20 +322,20 @@ def show_data_upload():
                 key="bank"
             )
             
+        # Ledger upload
+        with col2:
             uploaded_ledger = st.file_uploader(
-                "Upload General Ledger",
+                "Upload Purchase Order",
                 type=['csv', 'xlsx', 'pdf'],
                 accept_multiple_files=True,
                 key="ledger"
             )
-        
+
         if st.button("Start Reconciliation"):
-            if any([uploaded_invoices, uploaded_pos, uploaded_bank, uploaded_ledger]):
+            if any([uploaded_bank, uploaded_ledger]):
                 with st.spinner("Reconsiliation in progress..."):
                     try:
                         results = orchestrator.run_ai_reconciliation({
-                            'invoices': uploaded_invoices,
-                            'purchase_orders': uploaded_pos,
                             'bank_statements': uploaded_bank,
                             'ledger': uploaded_ledger
                         })
@@ -347,8 +351,6 @@ def show_data_upload():
                         summary_data = []
                         
                         for doc_type, file_type, files in [
-                            ("Invoices", "invoices", uploaded_invoices),
-                            ("Purchase Orders", "purchase_orders", uploaded_pos), 
                             ("Bank Statements", "bank_statements", uploaded_bank),
                             ("General Ledger", "ledger", uploaded_ledger)
                         ]:
@@ -361,6 +363,8 @@ def show_data_upload():
                             })
                         
                         summary_df = pd.DataFrame(summary_data)
+                        # Set row index to start at 1
+                        summary_df.index = range(1, len(summary_df) + 1)
                         st.dataframe(summary_df, use_container_width=True)
                         
                     except Exception as e:
@@ -368,23 +372,23 @@ def show_data_upload():
                         print(f"Full exception: {full_traceback}")
                         st.error(f"❌ Error processing files: {str(e)}")
             else:
-                st.warning("⚠️ Please upload at least one file to process")
-    
-    with tab2:
-        st.subheader("ERP System Integration")
-        st.info("Direct ERP integration capabilities - connect to SAP, NetSuite, Oracle, etc.")
+                st.warning("⚠️ Missing required files: Upload Bank Statement and Purchase Order to proceed.")
+
+    #with tab2:
+        # st.subheader("ERP System Integration")
+        # st.info("Direct ERP integration capabilities - connect to SAP, NetSuite, Oracle, etc.")
         
-        col1, col2 = st.columns(2)
-        with col1:
-            erp_system = st.selectbox("ERP System", ["SAP", "NetSuite", "Oracle", "QuickBooks", "Other"])
-            connection_string = st.text_input("Connection String", type="password")
+        # col1, col2 = st.columns(2)
+        # with col1:
+        #     erp_system = st.selectbox("ERP System", ["SAP", "NetSuite", "Oracle", "QuickBooks", "Other"])
+        #     connection_string = st.text_input("Connection String", type="password")
         
-        with col2:
-            sync_frequency = st.selectbox("Sync Frequency", ["Real-time", "Hourly", "Daily", "Weekly"])
-            last_sync = st.text_input("Last Sync", value="Not configured", disabled=True)
+        # with col2:
+        #     sync_frequency = st.selectbox("Sync Frequency", ["Real-time", "Hourly", "Daily", "Weekly"])
+        #     last_sync = st.text_input("Last Sync", value="Not configured", disabled=True)
         
-        if st.button("Test Connection"):
-            st.info("🔧 ERP integration is planned for future release")
+        # if st.button("Test Connection"):
+        #     st.info("🔧 ERP integration is planned for future release")
 
 def show_ai_reconciliation():
     st.header("🤖 AI-Powered Reconciliation Process")
@@ -576,6 +580,8 @@ def show_matching_review():
 
     # Show combined results in a table (without editing yet)
     st.subheader("All Matching Results")
+    # Set row index to start at 1
+    combined_df.index = range(1, len(combined_df) + 1)
     st.dataframe(combined_df.drop(columns=['match_reasoning'], errors='ignore'))
 
     st.markdown("---")
@@ -597,7 +603,7 @@ def show_matching_review():
         st.markdown(f"### Unmatched Record: {row.get('transaction_id', idx)}")
 
         # Display record fields (customize as needed)
-        st.json(row.drop(labels=['status', 'reasoning_display'], errors='ignore').to_dict())
+        # st.json(row.drop(labels=['status', 'reasoning_display'], errors='ignore').to_dict())
 
         # Show reasoning in expander
         with st.expander("LLM Reasoning / Explanation"):
@@ -623,6 +629,7 @@ def show_matching_review():
             "original_record": row.to_dict(),
         }
 
+    
     # Submit button to process feedback
     if st.button("Submit Reviewed Matches"):
         feedback = st.session_state.get('review_feedback', {})
@@ -643,8 +650,25 @@ def show_matching_review():
 
 
         if learned:
-            st.success(f"Stored {len(learned)} user-reviewed match corrections. These will improve future matching.")
-            st.json(learned)
+            st.success(f"✅ Success! {len(learned)} user-reviewed match saved. This will improve future matching accuracy.")
+            #st.json(learned)
+            # Prepare data for the grid
+            corrected_data = []
+            for record in learned:
+                corrected = record["corrected"]
+                corrected_data.append({
+                    "Transaction ID": corrected.get("transaction_id"),
+                    "Amount": corrected.get("amount"),
+                    "Date": corrected.get("date"),
+                    "Vendor": corrected.get("vendor"),
+                    "Original Match Reason": corrected.get("reasoning_display"),
+                    "Corrected Reason": corrected.get("user_feedback_reason")
+                })
+
+            # Create and display DataFrame
+            df = pd.DataFrame(corrected_data)
+            df.index = range(1, len(df) + 1)
+            st.dataframe(df, use_container_width=True)
         else:
             st.info("No corrections submitted or reasons missing for marked matches. Please provide reasons.")
 
@@ -716,7 +740,7 @@ def show_learning_analytics():
     try:
         from agents.learning import LearningAgent
         insights = learning_agent.get_learning_stats()
-        
+        st.info(f"learnings. {insights}")
         # Learning statistics
         col1, col2, col3 = st.columns(3)
         

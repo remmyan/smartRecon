@@ -38,7 +38,7 @@ class GroqHelper:
                 temperature=1,  # Low temperature for consistent results
                 response_format={"type": "json_object"}
             )
-            print(f"Groq response: {response}")
+            print(f"Groq response: {response}" )
             result = json.loads(response.choices[0].message.content)
             return self._process_matching_response(result)
         except Exception as e:
@@ -340,7 +340,7 @@ class GroqHelper:
         reasoning = response.get('reasoning', {})
         
         is_match = response.get('is_match', False)
-        confidence = response.get('confidence_score', 0)
+        confidence = response.get('confidence', 0)
         # Optionally clamp confidence between 0-100 as you do
         confidence = max(0, min(100, confidence))
         

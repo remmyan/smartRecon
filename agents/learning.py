@@ -42,7 +42,7 @@ class LearningAgent:
             except Exception:
                 _collection = self.chroma_client.create_collection("corrections")
         self.corrections_collection = _collection
-        self.learning_stats = {'total_corrections': 0, 'last_updated': datetime.now().isoformat()}
+        self.learning_stats = {'total_corrections': 0, 'last_updated': datetime.now().isoformat(), 'corrections_collection': self.corrections_collection}
 
     def _get_or_create_collection(self, name: str):
         try:

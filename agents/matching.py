@@ -41,15 +41,16 @@ class MatchingAgent:
         if self.use_llm and not unmatched_bank_statements.empty and not unmatched_ledger.empty:
             llm_matches, llm_unmatched = self._llm_semantic_match(unmatched_bank_statements, unmatched_ledger)
             results['llm_matches'] = llm_matches
+            results['unmatched'] = llm_unmatched
             
             # Remove LLM matched records
             unmatched_bank_statements = unmatched_bank_statements[~unmatched_bank_statements.index.isin(llm_matches.index)]
             unmatched_ledger = unmatched_ledger[~unmatched_ledger.index.isin(llm_matches.index)]
         
         # Step 3: Fuzzy matching on remaining records
-        if not unmatched_bank_statements.empty and not unmatched_bank_statements.empty:
-            fuzzy_matches = self._fuzzy_match(unmatched_bank_statements, unmatched_ledger)
-            results['fuzzy_matches'] = fuzzy_matches
+        #if not unmatched_bank_statements.empty and not unmatched_bank_statements.empty:
+           # fuzzy_matches = self._fuzzy_match(unmatched_bank_statements, unmatched_ledger)
+           # results['fuzzy_matches'] = fuzzy_matches
         
         # # Step 4: Bank statement matching
         # bank_matches = self._bank_matching(ledger, bank_statements)
@@ -61,29 +62,54 @@ class MatchingAgent:
             if not results[match_type].empty:
                 all_matched_ids.update(results[match_type].index)
         
-        results['unmatched'] = llm_unmatched
+        #results['unmatched'] = llm_unmatched
         
         return results
 
+    # def extract_reason(self, reasoning: dict) -> str:
+    #     candidates = ['date_proximity', 'vendor_name_variations', 'amount_similarity']
+    #     best_reason = None
+    #     best_score = 101  # Init above max 100
+    #     print(f"Extracting reason : {reasoning}")
+    #     for factor in candidates:
+    #         score_info = reasoning.get(factor, None)
+    #         print(f"Factor: {factor}, Score Info: {score_info}")
+    #         if score_info:
+    #             score = score_info.get('score', 100)
+    #             reason = score_info.get('reason', '')
+    #             if score < best_score and score < 100:
+    #                 best_score = score
+    #             best_reason = reason
+        
+    #     if best_reason:
+    #         return best_reason
+    #     else:
+    #         return "No matching record found above confidence threshold." 
+
     def extract_reason(self, reasoning: dict) -> str:
+        """Combine all applicable match reasons from candidate factors"""
         candidates = ['date_proximity', 'vendor_name_variations', 'amount_similarity']
-        best_reason = None
-        best_score = 101  # Init above max 100
-        print(f"Extracting reason : {reasoning}")
+        collected_reasons = set()  # Use set to automatically avoid duplicates
+
+        print(f"Extracting reason: {reasoning}")
+
         for factor in candidates:
-            score_info = reasoning.get(factor, None)
+            score_info = reasoning.get(factor)
             print(f"Factor: {factor}, Score Info: {score_info}")
+            
             if score_info:
                 score = score_info.get('score', 100)
-                reason = score_info.get('reason', '')
-                if score < best_score and score < 100:
-                    best_score = score
-                best_reason = reason
-        
-        if best_reason:
-            return best_reason
+                reason = score_info.get('reason', '').strip()
+                
+                # Only include reason if score is below threshold
+                if score <= 100 and reason:
+                    collected_reasons.add(reason)
+
+        if collected_reasons:
+            # Join all valid reasons into a full explanation
+            return " | ".join(collected_reasons)
         else:
-            return "No matching record found above confidence threshold."    
+            return "No matching record found above confidence threshold."   
     
     def _llm_semantic_match(self, df1: pd.DataFrame, df2: pd.DataFrame) -> (pd.DataFrame, pd.DataFrame):
         """LLM matching for remaining, collaborating with Learning Agent for patterns."""
@@ -92,34 +118,56 @@ class MatchingAgent:
         records1 = df1.to_dict('records')
         records2 = df2.to_dict('records')
 
-        for i, record1 in enumerate(records1):
+        for i, banktxn in enumerate(records1):
             # Collaborate: Query Learning Agent for patterns
-            similar_patterns = self.learning_agent.retrieve_similar_patterns(record1)
+            similar_patterns = self.learning_agent.retrieve_similar_patterns(banktxn)
             print(f"Record {i}: Retrieved {similar_patterns} similar patterns for LLM matching.")
-            #pattern_adjustment = self._apply_pattern_adjustment(record1, similar_patterns)
+            #pattern_adjustment = self._apply_pattern_adjustment(banktxn, similar_patterns)
 
             # Use Groq LLM for semantic matching
             best_match = None
             un_match = None
             best_confidence = 0
-            for j, record2 in enumerate(records2):
-                match_result = self.groq_helper.semantic_match_analysis(record1, record2, similar_patterns)  # Using Groq helper
+            for j, purchase_transaction in enumerate(records2):
+                match_result = self.groq_helper.semantic_match_analysis(banktxn, purchase_transaction, similar_patterns)  # Using Groq helper
                 #adjusted_confidence = match_result['confidence'] + (len(similar_patterns) * 0.1)  # Boost from patterns
+                is_last_record = j == len(records2) - 1
                 if match_result['is_match'] :
                     best_match = {
-                        'record': record1,
-                        'matched_with': j,
+                        'record': banktxn,
+                        'matched_with': purchase_transaction['order_id'],
                         'confidence': match_result['confidence'],
                         'reasoning': match_result['reasoning']
                     }
                 else:
-                    un_match = {
-                        'record': record1,
-                        'matched_with': None,
-                        'confidence': match_result['confidence'],
-                        'reasoning': match_result['reasoning']
-                    }    
-
+                    is_partial_match = self.is_partial_match(banktxn, purchase_transaction)
+                    if is_partial_match:
+                        best_match = {
+                            'record': banktxn,
+                            'matched_with': purchase_transaction['order_id'],
+                            'confidence': match_result['confidence'],
+                            'reasoning': match_result['reasoning']
+                        }
+                        break
+                    else: ## Finding Best Unmatched Record
+                        if match_result['confidence'] >= best_confidence:
+                            best_confidence = match_result['confidence']
+                            un_match = {
+                                'record': banktxn,
+                                'matched_with': None,
+                                'confidence': match_result['confidence'],
+                                'reasoning': match_result['reasoning']
+                            }
+                        else:
+                            if is_last_record and not un_match:
+                                reasoning = self.set_common_reason(match_result['reasoning'], 'No match found: This transaction requires manual review.')
+                                un_match = {
+                                    'record': banktxn,
+                                    'matched_with': None,
+                                    'confidence': match_result['confidence'],
+                                    'reasoning': reasoning
+                                }
+           
             if best_match:
                 match_record = pd.Series(best_match['record'])
                 match_record['match_type'] = 'llm'
@@ -199,12 +247,13 @@ class MatchingAgent:
                     match_record = row1.copy()
                     match_record['match_type'] = 'exact'
                     match_record['match_confidence'] = 100
-                    match_record['matched_with'] = idx2
-                    match_record['match_reasoning'] = 'Exact match on amount, vendor, and date'
+                    match_record['matched_with'] = row2['order_id']
+                    match_record['match_reasoning'] = (f'Exact Match Found: Transaction matched based on Vendor Name, Transaction Amount and Transaction Date falling within the predefined threshold limits')
                     matches.append(match_record)
                     break
         
         return pd.DataFrame(matches)
+    
     
     def _fuzzy_match(self, df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
         """Perform fuzzy matching using rapidfuzz"""
@@ -332,3 +381,35 @@ class MatchingAgent:
                 })
         
         return explanations
+    
+    def is_partial_match(self, record1, record2):
+        """
+        Compare two records and return True if any two of (amount, date, vendor) are the same.
+
+        Each record should be a dictionary with 'amount', 'date', and 'vendor' keys.
+        """
+        count = 0
+
+        if record1['amount'] == record2['amount']:
+            count += 1
+        if record1['date'] == record2['date']:
+            count += 1
+        if record1['vendor'].strip().lower() == record2['vendor'].strip().lower():
+            count += 1
+
+        return count >= 2
+
+    def set_common_reason(self, reasoning_obj, common_message):
+        """
+        Sets the same reason message for all keys in a reasoning object.
+
+        Parameters:
+        reasoning_obj (dict): Original reasoning dictionary.
+        common_message (str): Reason message to apply to all keys.
+
+        Returns:
+        dict: Updated reasoning dictionary with uniform reason messages.
+        """
+        for key in reasoning_obj:
+            reasoning_obj[key]['reason'] = common_message
+        return reasoning_obj

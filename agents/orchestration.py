@@ -43,8 +43,8 @@ class Orchestrator:
         invoices, invoice_dupes = self.anomaly.remove_duplicates(raw_invoices)
         ledger, ledger_dupes = self.anomaly.remove_duplicates(raw_ledger)
         bank, bank_dupes = self.anomaly.remove_duplicates(raw_bank)
-        self.logger.info("Deduplication results: Invoices: %d, Ledger: %d, Bank: %d",
-                         len(invoices), len(ledger), len(bank))
+        self.logger.info("Deduplication results:  Ledger: %d, Bank: %d",
+                         len(ledger), len(bank))
         
         # Step 2: Matching with optional learning collaboration (queries if available, but no storage during recon)
         self.logger.info("Matching", "Performing hybrid matching")
@@ -69,7 +69,7 @@ class Orchestrator:
             'message': "Recon complete. Use handle_user_overrides() for any corrections to invoke learning.",
             'invoices': len(invoices),
             'ledger': len(ledger),
-            'bank': len(bank)
+            'bank_statements': len(bank)
         }
 
     def handle_user_overrides(self, exceptions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
